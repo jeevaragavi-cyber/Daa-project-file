@@ -1,0 +1,128 @@
+import heapq
+
+
+# ---------------- Union-Find Class ----------------
+
+class UnionFind:
+    def __init__(self, n):
+        self.parent = list(range(n))
+        self.rank = [0] * n
+
+    def find(self, x):
+        # Path Compression
+        if self.parent[x] != x:
+            self.parent[x] = self.find(self.parent[x])
+        return self.parent[x]
+
+    def union(self, x, y):
+        rx = self.find(x)
+        ry = self.find(y)
+
+        if rx == ry:
+            return False
+
+        # Union by Rank
+        if self.rank[rx] < self.rank[ry]:
+            rx, ry = ry, rx
+
+        self.parent[ry] = rx
+
+        if self.rank[rx] == self.rank[ry]:
+            self.rank[rx] += 1
+
+        return True
+
+
+# ---------------- Kruskal's Algorithm ----------------
+
+def kruskal(n, edges):
+    edges = sorted(edges)
+
+    uf = UnionFind(n)
+    mst = []
+    total_cost = 0
+
+    for weight, u, v in edges:
+        if uf.union(u, v):
+            mst.append((u, v, weight))
+            total_cost += weight
+
+            if len(mst) == n - 1:
+                break
+
+    return mst, total_cost
+
+
+# ---------------- Prim's Algorithm ----------------
+
+def prim(n, adj, start=0):
+    visited = [False] * n
+    min_heap = [(0, start, -1)]
+
+    mst = []
+    total_cost = 0
+
+    while min_heap:
+        weight, u, parent = heapq.heappop(min_heap)
+
+        if visited[u]:
+            continue
+
+        visited[u] = True
+        total_cost += weight
+
+        if parent != -1:
+            mst.append((parent, u, weight))
+
+        for v, wt in adj[u]:
+            if not visited[v]:
+                heapq.heappush(min_heap, (wt, v, u))
+
+    return mst, total_cost
+
+
+# ---------------- Main Program ----------------
+
+n = 7
+
+edges = [
+    (7, 0, 1),
+    (5, 0, 3),
+    (8, 1, 2),
+    (9, 1, 3),
+    (7, 1, 4),
+    (5, 2, 4),
+    (15, 3, 4),
+    (6, 3, 5),
+    (8, 4, 5),
+    (9, 4, 6),
+    (11, 5, 6)
+]
+
+adj = {i: [] for i in range(n)}
+
+for weight, u, v in edges:
+    adj[u].append((v, weight))
+    adj[v].append((u, weight))
+
+# Run Kruskal
+k_mst, k_cost = kruskal(n, edges)
+
+# Run Prim
+p_mst, p_cost = prim(n, adj)
+
+# ---------------- Output ----------------
+
+print("========== Kruskal's Algorithm ==========")
+
+for u, v, w in k_mst:
+    print(f"Edge ({u} - {v})  Weight = {w}")
+
+print("Total Cost =", k_cost)
+
+print("\n========== Prim's Algorithm ==========")
+
+for u, v, w in p_mst:
+    print(f"Edge ({u} - {v})  Weight = {w}")
+
+print("Total Cost =", p_cost)
